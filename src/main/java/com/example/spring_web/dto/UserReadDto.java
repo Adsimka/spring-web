@@ -1,6 +1,7 @@
 package com.example.spring_web.dto;
 
 import com.example.spring_web.dao.entity.Role;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
 import lombok.Value;
 
@@ -11,6 +12,7 @@ import java.util.UUID;
 @Value
 public class UserReadDto {
 
+    @JsonIgnore
     UUID id;
 
     String username;
