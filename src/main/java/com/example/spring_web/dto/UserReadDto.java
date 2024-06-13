@@ -1,21 +1,18 @@
 package com.example.spring_web.dto;
 
 import com.example.spring_web.dao.entity.Role;
-import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
 import lombok.Value;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 @Builder
 @Value
-@JsonFilter("UsersFilter")
 public class UserReadDto {
 
     @JsonIgnore
-    UUID id;
+    Long id;
 
     String username;
 

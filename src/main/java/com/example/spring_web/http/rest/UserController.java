@@ -1,43 +1,62 @@
 package com.example.spring_web.http.rest;
 
+import com.example.spring_web.dto.UserCreateEditDto;
 import com.example.spring_web.dto.UserReadDto;
 import com.example.spring_web.service.UserService;
-import com.fasterxml.jackson.databind.ser.FilterProvider;
-import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
-import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.converter.json.MappingJacksonValue;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
+import static org.springframework.http.ResponseEntity.noContent;
+import static org.springframework.http.ResponseEntity.notFound;
+
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("api/v1")
+@RequestMapping("api/v1/users")
 public class UserController {
 
     private final UserService userService;
 
-    @GetMapping("/users")
-    public List<UserReadDto> findAll() {
-        return userService.findAll();
+    @PostMapping
+    public ResponseEntity<?> create(@RequestBody UserCreateEditDto user) {
+        UserReadDto userEdit = userService.create(user);
+        return ResponseEntity.ok(userEdit);
     }
 
-    @GetMapping("/filtering")
-    public MappingJacksonValue findAllByFilter() {
+    @GetMapping
+    public ResponseEntity<List<UserReadDto>> findAll() {
         List<UserReadDto> users = userService.findAll();
-        return getMappingJacksonValue(users, "firstname", "lastname", "birthDate");
+        return ResponseEntity.ok(users);
     }
 
-    private MappingJacksonValue getMappingJacksonValue(List<UserReadDto> users, String... fields) {
-        SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter.filterOutAllExcept(fields);
-        FilterProvider filters = new SimpleFilterProvider().addFilter("UsersFilter", filter);
-
-        MappingJacksonValue mapping = new MappingJacksonValue(users);
-        mapping.setFilters(filters);
-
-        return mapping;
+    @GetMapping("/{id}")
+    public UserReadDto findById(@PathVariable Long id) {
+        return userService.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
+
+    @PutMapping("/{id}")
+    public UserReadDto update(@PathVariable("id") Long id, UserCreateEditDto user) {
+        return userService.update(id, user)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseEntity<?> delete(@PathVariable("id") Long id) {
+        return userService.delete(id)
+                ? noContent().build()
+                : notFound().build();
+    }
+
+    @GetMapping("/size")
+    public ResponseEntity<Integer> getCountUsers() {
+        int size = userService.getCountUsers();
+        return new ResponseEntity<>(size, HttpStatus.OK);
+    }
+
 }

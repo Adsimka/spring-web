@@ -11,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -23,7 +22,16 @@ public class UserService {
 
     private final UserRepository userRepository;
 
-    public Optional<UserReadDto> findById(UUID id) {
+    @Transactional
+    public UserReadDto create(UserCreateEditDto user) {
+        return Optional.of(user)
+                .map(editMapper::map)
+                .map(userRepository::saveAndFlush)
+                .map(readMapper::map)
+                .orElseThrow();
+    }
+
+    public Optional<UserReadDto> findById(Long id) {
         return userRepository.findById(id)
                 .map(readMapper::map);
     }
@@ -34,8 +42,20 @@ public class UserService {
                 .toList();
     }
 
+    public Integer getCountUsers() {
+        return userRepository.findAll().size();
+    }
+
     @Transactional
-    public boolean delete(UUID id) {
+    public Optional<UserReadDto> update(Long id, UserCreateEditDto user) {
+        return userRepository.findById(id)
+                .map(entity -> editMapper.map(user, entity))
+                .map(userRepository::saveAndFlush)
+                .map(readMapper::map);
+    }
+
+    @Transactional
+    public boolean delete(Long id) {
         return userRepository.findById(id)
                 .map(user -> {
                     userRepository.delete(user);
@@ -43,16 +63,5 @@ public class UserService {
                     return true;
                 })
                 .orElse(false);
-    }
-
-    @Transactional
-    public UserReadDto create(UserCreateEditDto user) {
-        return Optional.of(user)
-                .map(dto -> {
-                    return editMapper.map(dto);
-                })
-                .map(userRepository::saveAndFlush)
-                .map(readMapper::map)
-                .orElseThrow();
     }
 }
