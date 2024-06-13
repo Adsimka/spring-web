@@ -3,12 +3,12 @@ package com.example.spring_web.dto;
 import com.example.spring_web.dao.entity.Role;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 
 import java.time.LocalDate;
 
 @Builder
-@Value
+@Data
 public class UserReadDto {
 
     @JsonIgnore

@@ -7,6 +7,9 @@ import com.example.spring_web.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatcher;
+import org.mockito.ArgumentMatchers;
+import org.mockito.stubbing.OngoingStubbing;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -17,8 +20,7 @@ import java.time.LocalDate;
 import java.util.Optional;
 
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -69,9 +71,34 @@ public class UserControllerTest {
 
         when(userService.findById(100L)).thenReturn(Optional.ofNullable(user));
         mockMvc.perform(get("/api/v1/users/{id}", 100L))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.id").value(100L))
-                .andExpect(jsonPath("$.username").value("andrey@mail.ru"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value("andrey@mail.ru"))
+                .andExpect(jsonPath("$.firstname").value("Andrey"))
+                .andExpect(jsonPath("$.lastname").value("Kovalev"))
+                .andExpect(jsonPath("$.birthDate").value("2002-10-20"))
+                .andExpect(jsonPath("$.role").value(Role.USER.toString()));
+
+        verify(userService, times(1)).findById(100L);
+    }
+
+    @Test
+    @SneakyThrows
+    void update() {
+        UserReadDto user = buildReadUserDto();
+        user.setRole(Role.ADMIN);
+        user.setLastname("Minnegulov");
+
+        when(userService.update(ArgumentMatchers.eq(100L), ArgumentMatchers.any(UserCreateEditDto.class))).thenReturn(Optional.of(user));
+        String json = mapper.writeValueAsString(user);
+
+        mockMvc.perform(put("/api/v1/users/{id}", 100L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value(Role.ADMIN.toString()))
+                .andExpect(jsonPath("$.lastname").value("Minnegulov"))
+                .andExpect(jsonPath("$.firstname").value("Andrey"));
     }
 
     private UserCreateEditDto buildCreateEditUserDto() {

@@ -22,13 +22,13 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping
-    public ResponseEntity<?> create(@RequestBody UserCreateEditDto user) {
+    public ResponseEntity<UserReadDto> create(@RequestBody UserCreateEditDto user) {
         UserReadDto userEdit = userService.create(user);
-        return ResponseEntity.ok(userEdit);
+        return new ResponseEntity<>(userEdit, HttpStatus.CREATED);
     }
 
     @GetMapping
-    public ResponseEntity<List<UserReadDto>> findAll() {
+        public ResponseEntity<List<UserReadDto>> findAll() {
         List<UserReadDto> users = userService.findAll();
         return ResponseEntity.ok(users);
     }
